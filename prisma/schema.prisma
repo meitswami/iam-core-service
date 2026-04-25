@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoleKey {
+  SuperAdmin
+  Admin
+  User
+  Auditor
+}
+
+model User {
+  id            String   @id @default(uuid())
+  tenantId      String?
+  externalId    String   @unique // Azure AD "sub" or "oid"
+  provider      String   // "azuread" | "zoho"
+  email         String?
+  displayName   String?
+  upn           String?
+  groups        String[] @default([]) // raw IdP groups (IDs) snapshot at login
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions      Session[]
+  roleBindings  UserRoleBinding[]
+}
+
+model Session {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+  lastSeenAt         DateTime @default(now())
+  expiresAt          DateTime
+  revokedAt          DateTime?
+
+  // Encrypted at rest (AES-GCM). Stored as base64 strings.
+  idTokenEnc         String?
+  accessTokenEnc     String?
+  refreshTokenEnc    String?
+
+  ip                 String?
+  userAgent          String?
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  key         RoleKey  @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  bindings    UserRoleBinding[]
+  groupMaps   GroupRoleMapping[]
+}
+
+model UserRoleBinding {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  // If true, this binding was manually assigned/overridden by SuperAdmin.
+  isOverride Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, roleId])
+}
+
+model GroupRoleMapping {
+  id            String   @id @default(uuid())
+  provider      String   // "azuread" | "zoho"
+  tenantId      String?
+  groupId       String   // Azure AD group objectId
+  roleId        String
+  role          Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([provider, tenantId, groupId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  ts           DateTime @default(now())
+  actorUserId  String?
+  actorEmail   String?
+  action       String   // e.g. "auth.login.success"
+  outcome      String   // "success" | "failure"
+  ip           String?
+  userAgent    String?
+  target       String?  // resource identifier
+  meta         Json?
+
+  @@index([ts])
+  @@index([action])
+  @@index([actorUserId])
+}

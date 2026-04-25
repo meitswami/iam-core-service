@@ -1,0 +1,1 @@
+{"version":3,"file":"azuread.oidc.js","sourceRoot":"","sources":["../../../../../../src/iam/modules/auth/providers/azuread.oidc.ts"],"names":[],"mappings":";;AAEA,oEAUC;AAZD,iDAA0C;AAEnC,KAAK,UAAU,4BAA4B,CAChD,QAAgB,EAChB,QAAgB,EAChB,YAAoB;IAEpB,MAAM,SAAS,GAAG,IAAI,GAAG,CACvB,qCAAqC,QAAQ,wCAAwC,CACtF,CAAC;IAEF,OAAO,IAAA,yBAAS,EAAC,SAAS,EAAE,QAAQ,EAAE,YAAY,CAAC,CAAC;AACtD,CAAC"}

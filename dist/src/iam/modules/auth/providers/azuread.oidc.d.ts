@@ -1,0 +1,1 @@
+export declare function discoverAzureAdConfiguration(tenantId: string, clientId: string, clientSecret: string): Promise<import("openid-client", { with: { "resolution-mode": "import" } }).Configuration>;
